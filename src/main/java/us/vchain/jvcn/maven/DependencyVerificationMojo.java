@@ -12,6 +12,7 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
+import us.vchain.jvcn.JVCN;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -43,14 +44,15 @@ public class DependencyVerificationMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try {
-            final ArtifactVerifier artifactVerifier = new ArtifactVerifier(getLog(), requiredSigner);
+            final JVCN jvcn = new JVCN.Builder().build();
+            final ArtifactVerifier artifactVerifier = new ArtifactVerifier(getLog(), requiredSigner, jvcn);
             final ProjectBuildingRequest projectBuildingRequest = session.getProjectBuildingRequest();
             final ProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(projectBuildingRequest);
             buildingRequest.setProject(project);
             final DependencyNode rootNode = dependencyGraphBuilder.buildDependencyGraph(buildingRequest, null);
             final LinkedHashSet<DependencyNode> dependencyNodes = new LinkedHashSet<>(rootNode.getChildren());
             final Set<DependencyNode> dependencies = asBoolean(transitive) ? transitiveClosure(dependencyNodes) : dependencyNodes;
-            final int failures = artifactVerifier.verify(dependencies);
+            final Long failures = artifactVerifier.verify(dependencies);
             if (failures > 0 && asBoolean(failOnError)) {
                 throw new MojoExecutionException(failures + " dependencies could not be verified");
             }

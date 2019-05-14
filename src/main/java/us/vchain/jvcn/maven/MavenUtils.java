@@ -2,6 +2,8 @@ package us.vchain.jvcn.maven;
 
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 
 import static java.lang.String.format;
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
 
@@ -18,15 +21,16 @@ class MavenUtils {
 
     }
 
-    static Set<DependencyNode> transitiveClosure(final Set<DependencyNode> dependencies) {
+    static Set<DependencyNode> transitiveClosure(final Collection<DependencyNode> dependencies) {
         if (dependencies == null || dependencies.isEmpty()) {
             return emptySet();
         }
-        final Set<DependencyNode> result = new LinkedHashSet<>();
-        for (final DependencyNode dependency : dependencies) {
-            result.addAll(dependencies);
-            result.addAll(transitiveClosure(new LinkedHashSet<>(dependency.getChildren())));
-        }
+        final Set<DependencyNode> result = new LinkedHashSet<>(dependencies);
+        dependencies.stream()
+            .map(DependencyNode::getChildren)
+            .map(LinkedHashSet::new)
+            .map(MavenUtils::transitiveClosure)
+            .forEach(result::addAll);
         return result;
     }
 
@@ -51,5 +55,12 @@ class MavenUtils {
                 throw new IllegalStateException(format("Duplicate key %s", u));
             },
             LinkedHashMap::new);
+    }
+
+    @SafeVarargs
+    static <T> Set<T> newSet(final T... ts) {
+        final Set<T> set = new HashSet<>();
+        addAll(set, ts);
+        return set;
     }
 }

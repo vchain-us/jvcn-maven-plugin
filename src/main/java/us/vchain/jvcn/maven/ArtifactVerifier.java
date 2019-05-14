@@ -7,11 +7,13 @@ import us.vchain.jvcn.Asset;
 import us.vchain.jvcn.JVCN;
 
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
+import static us.vchain.jvcn.maven.MavenUtils.newSet;
 import static us.vchain.jvcn.maven.MavenUtils.toLinkedMap;
 
 class ArtifactVerifier {
@@ -21,63 +23,78 @@ class ArtifactVerifier {
 
     private final JVCN jvcn;
 
-    ArtifactVerifier(final Log log,
-                     final String requiredSigner) {
+    ArtifactVerifier(final Log log, final String requiredSigner, final JVCN jvcn) {
         this.log = log;
         this.requiredSigner = requiredSigner;
-        jvcn = new JVCN.Builder().build();
+        this.jvcn = jvcn;
     }
 
-    int verify(final Set<DependencyNode> dependencyNodes) {
-        int failures = 0;
+    Long verify(final Set<DependencyNode> dependencyNodes) {
+        final Set<String> requiredSigners = getRequiredSigners();
         log.info("Verifying " + dependencyNodes.size() + " artifact dependencies" +
-            (requiredSigner == null || requiredSigner.isEmpty() ? "" : " signed by: " + requiredSigner));
-        final Map<Artifact, Optional<Asset>> assetMap = verifyAll(dependencyNodes);
-        for (final Entry<Artifact, Optional<Asset>> entry : assetMap.entrySet()) {
-            final Artifact artifact = entry.getKey();
-            final Optional<Asset> asset = entry.getValue();
-            if (asset.isPresent()) {
-                switch (asset.get().getStatus()) {
-                    case TRUSTED:
-                        log.info(format("Dependency trusted: %s:%s:%s - signed by: %s (%s)",
-                            artifact.getGroupId(),
-                            artifact.getArtifactId(),
-                            artifact.getVersion(),
-                            asset.get().getSigner(),
-                            asset.get().getLevel()));
-                        break;
-                    case UNTRUSTED: // fall-through
-                    case UNKNOWN: // fall-through
-                    case UNSUPPORTED:
-                        log.warn(format("Dependency %s: %s:%s:%s - signed by: %s (%s)",
-                            asset.get().getStatus().toString().toLowerCase(),
-                            artifact.getGroupId(),
-                            artifact.getArtifactId(),
-                            artifact.getVersion(),
-                            asset.get().getSigner(),
-                            asset.get().getLevel()));
-                        failures++;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown status: " + asset.get().getStatus());
-                }
-            } else {
-                log.warn("Dependency unknown: "
-                    + artifact.getGroupId()
-                    + ":" + artifact.getArtifactId()
-                    + ":" + artifact.getVersion());
-                failures++;
-            }
-        }
-        return failures;
+            (requiredSigners.isEmpty() ? "" : " signed by: " + requiredSigners));
+        return verify(dependencyNodes, requiredSigners).entrySet().stream()
+            .filter(entry -> !verifyAsset(entry.getKey(), entry.getValue()))
+            .count();
     }
 
-    private Map<Artifact, Optional<Asset>> verifyAll(final Set<DependencyNode> dependencyNodes) {
+    private Set<String> getRequiredSigners() {
+        return requiredSigner == null || requiredSigner.isEmpty()
+            ? emptySet()
+            : newSet(requiredSigner.split(",")).stream().map(String::trim).collect(toSet());
+    }
+
+    private Map<Artifact, Optional<Asset>> verify(final Set<DependencyNode> dependencyNodes,
+                                                  final Set<String> requiredSigners) {
         return dependencyNodes.parallelStream()
             .collect(toLinkedMap(
                 DependencyNode::getArtifact,
-                d -> requiredSigner == null || requiredSigner.isEmpty()
-                    ? jvcn.verify(d.getArtifact().getFile())
-                    : jvcn.verify(d.getArtifact().getFile(), requiredSigner)));
+                dependencyNode -> verify(dependencyNode, requiredSigners)));
+    }
+
+    private Optional<Asset> verify(final DependencyNode dependencyNode,
+                                   final Set<String> requiredSigners) {
+        return requiredSigners.isEmpty()
+            ? jvcn.verify(dependencyNode.getArtifact().getFile())
+            : jvcn.verify(dependencyNode.getArtifact().getFile(), requiredSigners);
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private Boolean verifyAsset(final Artifact artifact, final Optional<Asset> asset) {
+        if (asset.isPresent()) {
+            final String publisher = asset.get().getPublisher() == null
+                ? asset.get().getSigner()
+                : asset.get().getPublisher();
+            switch (asset.get().getStatus()) {
+                case TRUSTED:
+                    log.info(format("Dependency %s: %s:%s:%s - signed by: %s (%s)",
+                        asset.get().getStatus().toString().toLowerCase(),
+                        artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        artifact.getVersion(),
+                        publisher,
+                        asset.get().getLevel()));
+                    return true;
+                case UNTRUSTED: // fall-through
+                case UNKNOWN: // fall-through
+                case UNSUPPORTED:
+                    log.warn(format("Dependency %s: %s:%s:%s - signed by: %s (%s)",
+                        asset.get().getStatus().toString().toLowerCase(),
+                        artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        artifact.getVersion(),
+                        publisher,
+                        asset.get().getLevel()));
+                    return false;
+                default:
+                    throw new IllegalStateException("Unknown status: " + asset.get().getStatus());
+            }
+        } else {
+            log.warn("Dependency unknown: "
+                + artifact.getGroupId()
+                + ":" + artifact.getArtifactId()
+                + ":" + artifact.getVersion());
+            return false;
+        }
     }
 }
