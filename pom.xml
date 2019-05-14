@@ -7,7 +7,7 @@
     </prerequisites>
     <groupId>us.vchain</groupId>
     <artifactId>jvcn-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>jvcn-maven-plugin</name>
     <url>https://www.codenotary.io</url>
