@@ -14,7 +14,7 @@ Add the following plugin-depdency to your maven project:
 <plugin>
     <groupId>us.vchain</groupId>
     <artifactId>jvcn-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <executions>
         <execution>
             <id>audit</id>
