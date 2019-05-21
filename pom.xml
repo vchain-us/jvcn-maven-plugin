@@ -30,9 +30,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:https://github.com/vchain-us/jvcn-maven-plugin.git</connection>
-        <developerConnection>scm:git@github.com/vchain-us/jvcn-maven-plugin.git</developerConnection>
-        <url>https://github.com/vchain-us/jvcn-maven-plugin</url>
+        <connection>scm:git:git://github.com/vchain-us/jvcn-maven-plugin.git</connection>
+        <developerConnection>scm:git:ssh://github.com/vchain-us/jvcn-maven-plugin.git</developerConnection>
+        <url>https://github.com/vchain-us/jvcn-maven-plugin/tree/master</url>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
