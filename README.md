@@ -9,23 +9,39 @@ project dependencies through [code notary](https://www.codenotary.io).
 This software is released under [GPL3](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 ## Usage
-Add the following plugin-depdency to your maven project:
+
+### Add the plugin dependency to your maven project
 ```xml
-<plugin>
-    <groupId>us.vchain</groupId>
-    <artifactId>jvcn-maven-plugin</artifactId>
-    <version>0.0.1</version>
-    <executions>
-        <execution>
-            <id>audit</id>
-            <phase>validate</phase>
-            <goals>
-                <goal>audit</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
+<build>
+   ...
+   <plugins>
+      ...
+      <plugin>
+         <groupId>us.vchain</groupId>
+         <artifactId>jvcn-maven-plugin</artifactId>
+         <version>0.0.1</version>
+         <executions>
+            <execution>
+               <id>audit</id>
+               <phase>validate</phase>
+               <goals>
+                  <goal>audit</goal>
+               </goals>
+            </execution>
+         </executions>
+      </plugin>
+      ... 
+   </plugins>
+   ...
+</build>
 ```
+
+### Notarize your dependencies
+
+If the build fails stating that some (or all) dependencies could not be verified, perform the following steps to notarize them:
+1. Download the dependencies JARs from the Maven repository to your machine
+2. Navigate to the [CodeNotary dashboard](https://dashboard.codenotary.io/), create an account if you don't already have one and sign each JAR.
+3. Re-run the build. This time all dependencies should be reported as trusted and the build should succeed again.
 
 ## Plugin configuration
 The plugin provides some configuration options:
