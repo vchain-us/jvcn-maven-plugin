@@ -47,7 +47,7 @@
         <maven.version>3.3.9</maven.version>
         <maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
         <jvcn.version>0.0.1</jvcn.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <maven-plugin-testing-harness.version>3.3.0</maven-plugin-testing-harness.version>
         <maven-dependency-tree.version>3.0.1</maven-dependency-tree.version>
         <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
