@@ -49,7 +49,7 @@
         <jvcn.version>0.0.1</jvcn.version>
         <junit.version>4.12</junit.version>
         <maven-plugin-testing-harness.version>3.3.0</maven-plugin-testing-harness.version>
-        <maven-dependency-tree.version>3.0.1</maven-dependency-tree.version>
+        <maven-dependency-tree.version>3.1.1</maven-dependency-tree.version>
         <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
